@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>AJAX CRUD with json-server (books)</title>
+  <title>한국 도서 관리 시스템 (AJAX + JSON Server)</title>
   <style>
     body { font-family: system-ui, sans-serif; margin: 24px; }
     h1 { margin-top: 0; }
@@ -16,17 +16,15 @@
     .row-actions button { margin-right: 6px; }
     .hidden { display:none; }
     .badge { display:inline-block; padding:2px 8px; border-radius:999px; border:1px solid #ccc; font-size:12px; }
+    .search-bar { margin: 12px 0; }
+    .search-bar input { width: 250px; padding: 8px; }
   </style>
 </head>
 <body>
-  <h1>Books CRUD (json-server)</h1>
+  <h1>한국 도서 관리 시스템</h1>
 
-  <div class="toolbar">
-    <button id="btnLoad">데이터 목록보기</button>
-    <span class="muted">서버: <code>http://localhost:3000/books</code></span>
-  </div>
-
-    <div class="search-bar">
+  <!-- 검색 영역 -->
+  <div class="search-bar">
     <input type="text" id="searchInput" placeholder="도서명 또는 저자명 검색..." />
     <button id="btnSearch">검색</button>
     <button id="btnResetSearch">검색 초기화</button>
@@ -36,7 +34,7 @@
     <button id="btnLoad">데이터 목록보기</button>
     <span class="muted">서버: <code>http://localhost:3000/books</code></span>
   </div>
-  
+
   <h2>데이터 추가 / 수정</h2>
   <form id="bookForm">
     <div>
@@ -86,63 +84,73 @@
   <table id="grid">
     <thead>
       <tr>
-        <th style="width:70px">id</th>
+        <th>id</th>
         <th>title</th>
         <th>author</th>
-        <th style="width:100px">year</th>
-        <th style="width:130px">status</th>
-        <th style="width:90px">rating</th>
-        <th style="width:180px">Actions</th>
+        <th>year</th>
+        <th>status</th>
+        <th>rating</th>
+        <th>Actions</th>
       </tr>
     </thead>
     <tbody></tbody>
   </table>
 
   <script>
-    // === 설정 ===
     const BASE = "http://localhost:3000";
     const ENDPOINT = `${BASE}/books`;
 
-    // === 엘리먼트 ===
     const gridBody = document.querySelector("#grid tbody");
     const btnLoad = document.getElementById("btnLoad");
     const btnCreate = document.getElementById("btnCreate");
     const btnUpdate = document.getElementById("btnUpdate");
     const btnReset = document.getElementById("btnReset");
+    const btnSearch = document.getElementById("btnSearch");
+    const btnResetSearch = document.getElementById("btnResetSearch");
+    const searchInput = document.getElementById("searchInput");
 
-    // Form fields
     const f = {
       id:     document.getElementById("id"),
       title:  document.getElementById("title"),
       author: document.getElementById("author"),
       year:   document.getElementById("year"),
       status: document.getElementById("status"),
-      
       rating: document.getElementById("rating"),
     };
 
-    // === 공통 XHR 함수 (XMLHttpRequest) ===
+    // 공통 AJAX
     function xhr(method, url, data, onOk, onErr) {
       const x = new XMLHttpRequest();
       x.open(method, url);
-      x.setRequestHeader("content-type", "application/json; charset=UTF-8");
+      if (data) x.setRequestHeader("content-type", "application/json; charset=UTF-8");
       x.onload = () => {
         const ok = x.status >= 200 && x.status < 300;
-        if (ok) onOk && onOk(x);
-        else onErr ? onErr(x) : console.error(x.status, x.statusText);
+        ok ? onOk && onOk(x) : onErr && onErr(x);
       };
-      x.onerror = () => onErr ? onErr(x) : console.error("Network error");
+      x.onerror = () => onErr && onErr(x);
       x.send(data ? JSON.stringify(data) : null);
     }
 
-    // === 목록 조회 (GET) ===
+    // 목록 출력
     function loadList() {
-      xhr("GET", ENDPOINT, null, (res) => {
-        const rows = JSON.parse(res.responseText);
-        render(rows);
-      });
+      xhr("GET", ENDPOINT, null, res => render(JSON.parse(res.responseText)));
     }
 
+    // 검색 기능
+    function doSearch() {
+      const keyword = searchInput.value.trim();
+      if (!keyword) return alert("검색어를 입력하세요.");
+      const url = `${ENDPOINT}?q=${encodeURIComponent(keyword)}`;
+      xhr("GET", url, null, res => render(JSON.parse(res.responseText)));
+    }
+
+    // 검색 초기화
+    function resetSearch() {
+      searchInput.value = "";
+      loadList();
+    }
+
+    // 렌더링
     function render(rows) {
       gridBody.innerHTML = rows.map(b => `
         <tr>
@@ -152,7 +160,7 @@
           <td>${b.year}</td>
           <td><span class="badge">${b.status}</span></td>
           <td>${b.rating ?? ""}</td>
-          <td class="row-actions">
+          <td>
             <button onclick='fillForm(${JSON.stringify(b).replace(/'/g,"&#39;")})'>수정</button>
             <button onclick="doDelete(${b.id})">삭제</button>
           </td>
@@ -160,59 +168,42 @@
       `).join("");
     }
 
-    // === 생성 (POST) ===
+    // 생성
     function doCreate() {
       const payload = getPayloadFromForm(false);
       if (!payload) return;
-      xhr("POST", ENDPOINT, payload, () => {
-        clearForm();
-        loadList();
-      });
+      xhr("POST", ENDPOINT, payload, () => { clearForm(); loadList(); });
     }
 
-    // === 수정 (PUT) ===
+    // 수정
     function doUpdate() {
       const payload = getPayloadFromForm(true);
       if (!payload) return;
       const id = Number(f.id.value);
-      if (!id) return alert("수정하려면 id가 필요하다.");
-      xhr("PUT", `${ENDPOINT}/${id}`, payload, () => {
-        clearForm();
-        loadList();
-      });
+      xhr("PUT", `${ENDPOINT}/${id}`, payload, () => { clearForm(); loadList(); });
     }
 
-    // === 삭제 (DELETE) ===
+    // 삭제
     function doDelete(id) {
       if (!confirm(`정말 삭제할까요? (id=${id})`)) return;
       xhr("DELETE", `${ENDPOINT}/${id}`, null, () => loadList());
     }
 
-    // === 폼 도우미 ===
-    function fillForm(book) {
-      f.id.value = book.id;
-      f.title.value = book.title;
-      f.author.value = book.author;
-      f.year.value = book.year;
-      f.status.value = book.status;
-      f.rating.value = book.rating ?? "";
+    // 폼 관리
+    function fillForm(b) {
+      f.id.value = b.id;
+      f.title.value = b.title;
+      f.author.value = b.author;
+      f.year.value = b.year;
+      f.status.value = b.status;
+      f.rating.value = b.rating ?? "";
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
-
-    function clearForm() {
-      document.getElementById("bookForm").reset();
-      f.id.value = "";
-    }
+    function clearForm() { document.getElementById("bookForm").reset(); f.id.value = ""; }
 
     function getPayloadFromForm(requireId) {
-      if (requireId && !f.id.value) {
-        alert("id가 비어 있다.");
-        return null;
-      }
-      if (!f.title.value || !f.author.value || !f.year.value) {
-        alert("title/author/year는 필수다.");
-        return null;
-      }
+      if (requireId && !f.id.value) return alert("id가 필요합니다.");
+      if (!f.title.value || !f.author.value || !f.year.value) return alert("title, author, year는 필수입니다.");
       return {
         title: f.title.value.trim(),
         author: f.author.value.trim(),
@@ -222,22 +213,17 @@
       };
     }
 
-    // XSS 방지용
     function escapeHtml(s) {
-      return String(s)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;");
+      return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
     }
 
-    // === 이벤트 바인딩 ===
     window.onload = () => {
       btnLoad.addEventListener("click", loadList);
       btnCreate.addEventListener("click", doCreate);
       btnUpdate.addEventListener("click", doUpdate);
       btnReset.addEventListener("click", clearForm);
-      // 초기 로드
+      btnSearch.addEventListener("click", doSearch);
+      btnResetSearch.addEventListener("click", resetSearch);
       loadList();
     };
   </script>
