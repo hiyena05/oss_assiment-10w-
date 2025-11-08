@@ -1,0 +1,16 @@
+{
+  "books": [
+    { "id": 1,  "title": "82년생 김지영", "author": "조남주", "year": 2016, "status": "available", "rating": 4.3 },
+    { "id": 2,  "title": "해리포터와 마법사의 돌", "author": "J.K. 롤링", "year": 1999, "status": "available", "rating": 4.8 },
+    { "id": 3,  "title": "파친코", "author": "이민진", "year": 2017, "status": "checked_out", "rating": 4.7 },
+    { "id": 4,  "title": "소년이 온다", "author": "한강", "year": 2014, "status": "available", "rating": 4.5 },
+    { "id": 5,  "title": "채식주의자", "author": "한강", "year": 2007, "status": "available", "rating": 4.6 },
+    { "id": 6,  "title": "지구 끝의 온실", "author": "김초엽", "year": 2021, "status": "available", "rating": 4.4 },
+    { "id": 7,  "title": "아몬드", "author": "손원평", "year": 2017, "status": "checked_out", "rating": 4.7 },
+    { "id": 8,  "title": "작별인사", "author": "김영하", "year": 2022, "status": "available", "rating": 4.5 },
+    { "id": 9,  "title": "데미안", "author": "헤르만 헤세", "year": 1919, "status": "available", "rating": 4.4 },
+    { "id": 10, "title": "모순", "author": "양귀자", "year": 1998, "status": "available", "rating": 4.2 },
+    { "id": 11, "title": "불편한 편의점", "author": "김호연", "year": 2021, "status": "available", "rating": 4.6 },
+    { "id": 12, "title": "공터에서", "author": "이승우", "year": 2020, "status": "available", "rating": 4.3 }
+  ]
+}
